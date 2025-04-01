@@ -37,23 +37,28 @@ post=readRDS('RDS/cart.rds')
 
 check <- readRDS('RDS/valid-cart.rds')
 
-pred <- list()
-AUC <- matrix(nrow = 200, ncol = 4)
-for(j in 1:200) {
-    bs <- readRDS(paste0('breast/', j, '.rds'))
-    for(i in 1:4) {
-        pred[[i]] <- predict(post[[i]], data.frame(bs$x.valid))
-        AUC[j,i] <- mean(outer(pred[[i]][bs$y.valid[[i]] == 0],
-                                   pred[[i]][bs$y.valid[[i]] == 1],
-                                   '<'))
-    }
-}
-saveRDS(AUC, 'RDS/breast-cart.rds')
+## pred <- list()
+## AUC <- matrix(nrow = 200, ncol = 4)
+## for(j in 1:200) {
+##     bs <- readRDS(paste0('breast/', j, '.rds'))
+##     for(i in 1:4) {
+##         pred[[i]] <- predict(post[[i]], data.frame(bs$x.valid))
+##         AUC[j,i] <- mean(outer(pred[[i]][bs$y.valid[[i]] == 0],
+##                                    pred[[i]][bs$y.valid[[i]] == 1],
+##                                    '<'))
+##     }
+## }
+## saveRDS(AUC, 'RDS/breast-cart.rds')
+AUC <- readRDS('RDS/breast-cart.rds')
 
+auc <- c(check[[1]]$auc[1], check[[2]]$auc[1], check[[3]]$auc[1], check[[4]]$auc[1])
+auc.lower <- apply(AUC, 2, quantile, probs = 0.025)
+auc.upper <- apply(AUC, 2, quantile, probs = 0.975)
+auc. <- (auc.upper-auc.lower)/2
 names(y.test)
-rbind(round(apply(AUC, 2, quantile, probs = 0.025), digits = 3),
-      round(c(check[[1]]$auc[1], check[[2]]$auc[1], check[[3]]$auc[1], check[[4]]$auc[1]), digits = 3),
-      round(apply(AUC, 2, quantile, probs = 0.975), digits = 3))
+rbind(round(auc-auc., digits = 3),
+      round(auc, digits = 3),
+      round(auc+auc., digits = 3))
 
 pred <- list()
 auc <- 0
